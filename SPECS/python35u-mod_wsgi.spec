@@ -12,8 +12,8 @@
 %endif
 
 Name:           mod_wsgi
-Version:        4.4.8
-Release:        4%{?dist}
+Version:        4.4.22
+Release:        1.ius%{?dist}
 Summary:        A WSGI interface for Python web applications in Apache
 Group:          System Environment/Libraries
 License:        ASL 2.0
@@ -117,6 +117,9 @@ install -p -m 644 %{SOURCE1} $RPM_BUILD_ROOT%{_httpd_modconfdir}/10-wsgi.conf
 %endif
 
 %changelog
+* Thu Feb 25 2016 Carl George <carl.george@rackspace.com> - 4.4.22-1.ius
+- Latest upstream
+
 * Thu Feb 04 2016 Fedora Release Engineering <releng@fedoraproject.org> - 4.4.8-4
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_24_Mass_Rebuild
 
