@@ -11,13 +11,12 @@
 
 Name:           %{ius_python}-mod_wsgi
 Version:        4.4.22
-Release:        1.ius%{?dist}
+Release:        2.ius%{?dist}
 Summary:        A WSGI interface for Python web applications in Apache
 Group:          System Environment/Libraries
 License:        ASL 2.0
 URL:            http://modwsgi.org
 Source0:        http://github.srcurl.net/GrahamDumpleton/%{real_name}/%{version}/%{real_name}-%{version}.tar.gz
-Source1:        wsgi.conf
 
 BuildRequires:  httpd-devel < 2.4.10
 BuildRequires:  autoconf
@@ -54,12 +53,21 @@ make %{?_smp_mflags}
 make install DESTDIR=%{buildroot} LIBEXECDIR=%{_httpd_moddir}
 mv %{buildroot}%{_httpd_moddir}/mod_wsgi{,_%{python}}.so
 
+cat > wsgi.conf << EOF
+# NOTE:
+# Only one mod_wsgi can be loaded at a time.
+# Don't attempt to load if already loaded.
+<IfModule !wsgi_module>
+    LoadModule wsgi_module modules/mod_wsgi_%{python}.so
+</IfModule>
+EOF
+
 %if "%{_httpd_modconfdir}" == "%{_httpd_confdir}"
 # httpd <= 2.2.x
-install -Dpm 644 %{SOURCE1} %{buildroot}%{_httpd_confdir}/wsgi-%{python}.conf
+install -Dpm 644 wsgi.conf %{buildroot}%{_httpd_confdir}/wsgi-%{python}.conf
 %else
 # httpd >= 2.4.x
-install -Dpm 644 %{SOURCE1} %{buildroot}%{_httpd_modconfdir}/10-wsgi-%{python}.conf
+install -Dpm 644 wsgi.conf %{buildroot}%{_httpd_modconfdir}/10-wsgi-%{python}.conf
 %endif
 
 
@@ -70,6 +78,9 @@ install -Dpm 644 %{SOURCE1} %{buildroot}%{_httpd_modconfdir}/10-wsgi-%{python}.c
 
 
 %changelog
+* Thu Feb 25 2016 Carl George <carl.george@rackspace.com> - 4.4.22-2.ius
+- Generate configuration file in spec
+
 * Thu Feb 25 2016 Carl George <carl.george@rackspace.com> - 4.4.22-1.ius
 - Latest upstream
 - Port from Fedora to IUS
