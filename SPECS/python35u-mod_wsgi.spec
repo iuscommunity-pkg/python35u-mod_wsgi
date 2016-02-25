@@ -1,3 +1,7 @@
+%global real_name mod_wsgi
+%global python python3.5
+%global ius_python python35u
+
 %{!?_httpd_apxs: %{expand: %%global _httpd_apxs %%{_sbindir}/apxs}}
 %{!?_httpd_mmn: %{expand: %%global _httpd_mmn %%(cat %{_includedir}/httpd/.mmn 2>/dev/null || echo 0-0)}}
 %{!?_httpd_confdir:    %{expand: %%global _httpd_confdir    %%{_sysconfdir}/httpd/conf.d}}
@@ -5,20 +9,22 @@
 %{!?_httpd_modconfdir: %{expand: %%global _httpd_modconfdir %%{_sysconfdir}/httpd/conf.d}}
 %{!?_httpd_moddir:    %{expand: %%global _httpd_moddir    %%{_libdir}/httpd/modules}}
 
-Name:           mod_wsgi
+Name:           %{ius_python}-mod_wsgi
 Version:        4.4.22
 Release:        1.ius%{?dist}
 Summary:        A WSGI interface for Python web applications in Apache
 Group:          System Environment/Libraries
 License:        ASL 2.0
 URL:            http://modwsgi.org
-Source0:        http://github.srcurl.net/GrahamDumpleton/%{name}/%{version}/%{name}-%{version}.tar.gz
+Source0:        http://github.srcurl.net/GrahamDumpleton/%{real_name}/%{version}/%{real_name}-%{version}.tar.gz
 Source1:        wsgi.conf
 
-BuildRequires:  httpd-devel
+BuildRequires:  httpd-devel < 2.4.10
 BuildRequires:  autoconf
-BuildRequires:  python3-devel
+BuildRequires:  %{ius_python}-devel
 Requires:       httpd-mmn = %{_httpd_mmn}
+
+Provides:       %{real_name} = %{version}
 
 # Suppress auto-provides for module DSO
 %{?filter_provides_in: %filter_provides_in %{_httpd_moddir}/.*\.so$}
@@ -34,38 +40,39 @@ existing WSGI adapters for mod_python or CGI.
 
 
 %prep
-%setup -qn %{name}-%{version}
+%setup -qn %{real_name}-%{version}
 
 
 %build
 export LDFLAGS="$RPM_LD_FLAGS -L%{_libdir}"
 export CFLAGS="$RPM_OPT_FLAGS -fno-strict-aliasing"
-%configure --enable-shared --with-apxs=%{_httpd_apxs} --with-python=python3
+%configure --enable-shared --with-apxs=%{_httpd_apxs} --with-python=%{_bindir}/%{python}
 make %{?_smp_mflags}
 
 
 %install
 make install DESTDIR=%{buildroot} LIBEXECDIR=%{_httpd_moddir}
-mv  %{buildroot}%{_httpd_moddir}/mod_wsgi{,_python3}.so
+mv %{buildroot}%{_httpd_moddir}/mod_wsgi{,_%{python}}.so
 
 %if "%{_httpd_modconfdir}" == "%{_httpd_confdir}"
 # httpd <= 2.2.x
-install -Dpm 644 %{SOURCE1} %{buildroot}%{_httpd_confdir}/wsgi-python3.conf
+install -Dpm 644 %{SOURCE1} %{buildroot}%{_httpd_confdir}/wsgi-%{python}.conf
 %else
 # httpd >= 2.4.x
-install -Dpm 644 %{SOURCE1} %{buildroot}%{_httpd_modconfdir}/10-wsgi-python3.conf
+install -Dpm 644 %{SOURCE1} %{buildroot}%{_httpd_modconfdir}/10-wsgi-%{python}.conf
 %endif
 
 
 %files
 %doc LICENSE README.rst
-%config(noreplace) %{_httpd_modconfdir}/*wsgi-python3.conf
-%{_httpd_moddir}/mod_wsgi_python3.so
+%config(noreplace) %{_httpd_modconfdir}/*wsgi-%{python}.conf
+%{_httpd_moddir}/mod_wsgi_%{python}.so
 
 
 %changelog
 * Thu Feb 25 2016 Carl George <carl.george@rackspace.com> - 4.4.22-1.ius
 - Latest upstream
+- Port from Fedora to IUS
 
 * Thu Feb 04 2016 Fedora Release Engineering <releng@fedoraproject.org> - 4.4.8-4
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_24_Mass_Rebuild
