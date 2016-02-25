@@ -45,16 +45,16 @@ make %{?_smp_mflags}
 
 
 %install
-make install DESTDIR=$RPM_BUILD_ROOT LIBEXECDIR=%{_httpd_moddir}
-mv  $RPM_BUILD_ROOT%{_httpd_moddir}/mod_wsgi{,_python3}.so
+make install DESTDIR=%{buildroot} LIBEXECDIR=%{_httpd_moddir}
+mv  %{buildroot}%{_httpd_moddir}/mod_wsgi{,_python3}.so
 
-install -d -m 755 $RPM_BUILD_ROOT%{_httpd_modconfdir}
+install -d -m 755 %{buildroot}%{_httpd_modconfdir}
 %if "%{_httpd_modconfdir}" == "%{_httpd_confdir}"
 # httpd <= 2.2.x
-install -p -m 644 %{SOURCE1} $RPM_BUILD_ROOT%{_httpd_confdir}/wsgi-python3.conf
+install -p -m 644 %{SOURCE1} %{buildroot}%{_httpd_confdir}/wsgi-python3.conf
 %else
 # httpd >= 2.4.x
-install -p -m 644 %{SOURCE1} $RPM_BUILD_ROOT%{_httpd_modconfdir}/10-wsgi-python3.conf
+install -p -m 644 %{SOURCE1} %{buildroot}%{_httpd_modconfdir}/10-wsgi-python3.conf
 %endif
 
 
