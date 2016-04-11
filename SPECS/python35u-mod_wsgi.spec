@@ -72,7 +72,9 @@ install -Dpm 644 wsgi.conf %{buildroot}%{_httpd_modconfdir}/10-wsgi-%{python}.co
 
 
 %files
-%doc LICENSE README.rst
+%{!?_licensedir:%global license %%doc}
+%license LICENSE
+%doc README.rst
 %config(noreplace) %{_httpd_modconfdir}/*wsgi-%{python}.conf
 %{_httpd_moddir}/mod_wsgi_%{python}.so
 
@@ -80,6 +82,7 @@ install -Dpm 644 wsgi.conf %{buildroot}%{_httpd_modconfdir}/10-wsgi-%{python}.co
 %changelog
 * Mon Apr 11 2016 Carl George <carl.george@rackspace.com> - 4.5.1-1.ius
 - Latest upstream
+- Use %%license when possible
 
 * Thu Feb 25 2016 Carl George <carl.george@rackspace.com> - 4.4.22-2.ius
 - Generate configuration file in spec
