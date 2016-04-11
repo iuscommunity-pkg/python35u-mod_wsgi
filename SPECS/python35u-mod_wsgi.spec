@@ -10,8 +10,8 @@
 %{!?_httpd_moddir:    %{expand: %%global _httpd_moddir    %%{_libdir}/httpd/modules}}
 
 Name:           %{ius_python}-mod_wsgi
-Version:        4.4.22
-Release:        2.ius%{?dist}
+Version:        4.5.1
+Release:        1.ius%{?dist}
 Summary:        A WSGI interface for Python web applications in Apache
 Group:          System Environment/Libraries
 License:        ASL 2.0
@@ -78,6 +78,9 @@ install -Dpm 644 wsgi.conf %{buildroot}%{_httpd_modconfdir}/10-wsgi-%{python}.co
 
 
 %changelog
+* Mon Apr 11 2016 Carl George <carl.george@rackspace.com> - 4.5.1-1.ius
+- Latest upstream
+
 * Thu Feb 25 2016 Carl George <carl.george@rackspace.com> - 4.4.22-2.ius
 - Generate configuration file in spec
 
