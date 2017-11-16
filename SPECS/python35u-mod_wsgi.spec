@@ -1,6 +1,7 @@
-%global real_name mod_wsgi
-%global python python3.5
-%global ius_python python35u
+# IUS spec file for python35u-mod_wsgi, forked from Fedora
+
+%global srcname mod_wsgi
+%global python python35u
 
 %{!?_httpd_apxs: %{expand: %%global _httpd_apxs %%{_sbindir}/apxs}}
 %{!?_httpd_mmn: %{expand: %%global _httpd_mmn %%(cat %{_includedir}/httpd/.mmn 2>/dev/null || echo 0-0)}}
@@ -9,21 +10,17 @@
 %{!?_httpd_modconfdir: %{expand: %%global _httpd_modconfdir %%{_sysconfdir}/httpd/conf.d}}
 %{!?_httpd_moddir:    %{expand: %%global _httpd_moddir    %%{_libdir}/httpd/modules}}
 
-Name:           %{ius_python}-mod_wsgi
-Version:        4.5.19
+Name:           %{python}-%{srcname}
+Version:        4.5.21
 Release:        1.ius%{?dist}
 Summary:        A WSGI interface for Python web applications in Apache
-Group:          System Environment/Libraries
 License:        ASL 2.0
-URL:            http://modwsgi.org
-Source0:        http://github.srcurl.net/GrahamDumpleton/%{real_name}/%{version}/%{real_name}-%{version}.tar.gz
-
+URL:            https://modwsgi.readthedocs.io/
+Source0:        https://files.pythonhosted.org/packages/source/m/mod_wsgi/mod_wsgi-%{version}.tar.gz
 BuildRequires:  httpd-devel < 2.4.10
-BuildRequires:  autoconf
-BuildRequires:  %{ius_python}-devel
+BuildRequires:  %{python}-devel
 Requires:       httpd-mmn = %{_httpd_mmn}
-
-Provides:       %{real_name} = %{version}
+Provides:       %{srcname} = %{version}
 
 # Suppress auto-provides for module DSO
 %{?filter_provides_in: %filter_provides_in %{_httpd_moddir}/.*\.so$}
@@ -39,47 +36,49 @@ existing WSGI adapters for mod_python or CGI.
 
 
 %prep
-%setup -qn %{real_name}-%{version}
+%setup -qn %{srcname}-%{version}
 
 
 %build
 export LDFLAGS="$RPM_LD_FLAGS -L%{_libdir}"
 export CFLAGS="$RPM_OPT_FLAGS -fno-strict-aliasing"
-%configure --enable-shared --with-apxs=%{_httpd_apxs} --with-python=%{_bindir}/%{python}
+%configure --enable-shared --with-apxs=%{_httpd_apxs} --with-python=%{__python35u}
 make %{?_smp_mflags}
 
 
 %install
 make install DESTDIR=%{buildroot} LIBEXECDIR=%{_httpd_moddir}
-mv %{buildroot}%{_httpd_moddir}/mod_wsgi{,_%{python}}.so
+mv %{buildroot}%{_httpd_moddir}/mod_wsgi{,_python%{python35u_version}}.so
 
 cat > wsgi.conf << EOF
 # NOTE:
 # Only one mod_wsgi can be loaded at a time.
 # Don't attempt to load if already loaded.
 <IfModule !wsgi_module>
-    LoadModule wsgi_module modules/mod_wsgi_%{python}.so
+    LoadModule wsgi_module modules/mod_wsgi_python%{python35u_version}.so
 </IfModule>
 EOF
 
 %if "%{_httpd_modconfdir}" == "%{_httpd_confdir}"
 # httpd <= 2.2.x
-install -Dpm 644 wsgi.conf %{buildroot}%{_httpd_confdir}/wsgi-%{python}.conf
+install -Dpm 644 wsgi.conf %{buildroot}%{_httpd_confdir}/wsgi-python%{python35u_version}.conf
 %else
 # httpd >= 2.4.x
-install -Dpm 644 wsgi.conf %{buildroot}%{_httpd_modconfdir}/10-wsgi-%{python}.conf
+install -Dpm 644 wsgi.conf %{buildroot}%{_httpd_modconfdir}/10-wsgi-python%{python35u_version}.conf
 %endif
 
 
 %files
-%{!?_licensedir:%global license %%doc}
 %license LICENSE
-%doc README.rst
-%config(noreplace) %{_httpd_modconfdir}/*wsgi-%{python}.conf
-%{_httpd_moddir}/mod_wsgi_%{python}.so
+%doc CREDITS.rst README.rst
+%config(noreplace) %{_httpd_modconfdir}/*wsgi-python%{python35u_version}.conf
+%{_httpd_moddir}/mod_wsgi_python%{python35u_version}.so
 
 
 %changelog
+* Thu Nov 16 2017 Carl George <carl@george.computer> - 4.5.21-1.ius
+- Latest upstream
+
 * Mon Oct 02 2017 Carl George <carl@george.computer> - 4.5.19-1.ius
 - Latest upstream
 
