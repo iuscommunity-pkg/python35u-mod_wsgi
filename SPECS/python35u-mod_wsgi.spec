@@ -11,13 +11,14 @@
 %{!?_httpd_moddir:    %{expand: %%global _httpd_moddir    %%{_libdir}/httpd/modules}}
 
 Name:           %{python}-%{srcname}
-Version:        4.5.24
+Version:        4.6.2
 Release:        1.ius%{?dist}
 Summary:        A WSGI interface for Python web applications in Apache
 License:        ASL 2.0
 URL:            https://modwsgi.readthedocs.io/
 Source0:        https://github.com/GrahamDumpleton/mod_wsgi/archive/%{version}.tar.gz#/mod_wsgi-%{version}.tar.gz
 Patch0:         mod_wsgi-4.5.24-sphinx-build.patch
+Patch1:		mod_wsgi-4.6.2-exports.patch
 BuildRequires:  httpd-devel < 2.4.10
 BuildRequires:  %{python}-devel
 BuildRequires:  %{python}-setuptools
@@ -52,6 +53,7 @@ existing WSGI adapters for mod_python or CGI.
 %if 0%{?rhel} < 7
 %patch0 -p1
 %endif
+%patch1 -p1
 
 
 %build
@@ -62,47 +64,52 @@ make -C docs html
 
 export LDFLAGS="$RPM_LD_FLAGS -L%{_libdir}"
 export CFLAGS="$RPM_OPT_FLAGS -fno-strict-aliasing"
-%configure --enable-shared --with-apxs=%{_httpd_apxs} --with-python=%{__python35u}
+%configure --enable-shared --with-apxs=%{_httpd_apxs} --with-python=%{__python35}
 make %{?_smp_mflags}
-%{py35u_build}
+%{py35_build}
 
 
 %install
 make install DESTDIR=%{buildroot} LIBEXECDIR=%{_httpd_moddir}
-mv %{buildroot}%{_httpd_moddir}/mod_wsgi{,_python%{python35u_version}}.so
+mv %{buildroot}%{_httpd_moddir}/mod_wsgi{,_python%{python35_version}}.so
 
 cat > wsgi.conf << EOF
 # NOTE:
 # Only one mod_wsgi can be loaded at a time.
 # Don't attempt to load if already loaded.
 <IfModule !wsgi_module>
-    LoadModule wsgi_module modules/mod_wsgi_python%{python35u_version}.so
+    LoadModule wsgi_module modules/mod_wsgi_python%{python35_version}.so
 </IfModule>
 EOF
 
 %if "%{_httpd_modconfdir}" == "%{_httpd_confdir}"
 # httpd <= 2.2.x
-install -Dpm 644 wsgi.conf %{buildroot}%{_httpd_confdir}/wsgi-python%{python35u_version}.conf
+install -Dpm 644 wsgi.conf %{buildroot}%{_httpd_confdir}/wsgi-python%{python35_version}.conf
 %else
 # httpd >= 2.4.x
-install -Dpm 644 wsgi.conf %{buildroot}%{_httpd_modconfdir}/10-wsgi-python%{python35u_version}.conf
+install -Dpm 644 wsgi.conf %{buildroot}%{_httpd_modconfdir}/10-wsgi-python%{python35_version}.conf
 %endif
 
-%{py35u_install}
+%{py35_install}
 
 %files
 %license LICENSE
 %doc CREDITS.rst README.rst
-%config(noreplace) %{_httpd_modconfdir}/*wsgi-python%{python35u_version}.conf
-%{_httpd_moddir}/mod_wsgi_python%{python35u_version}.so
-%{python35u_sitearch}/mod_wsgi-*.egg-info
-%{python35u_sitearch}/mod_wsgi
+%config(noreplace) %{_httpd_modconfdir}/*wsgi-python%{python35_version}.conf
+%{_httpd_moddir}/mod_wsgi_python%{python35_version}.so
+%{python35_sitearch}/mod_wsgi-*.egg-info
+%{python35_sitearch}/mod_wsgi
 %{_bindir}/mod_wsgi-express
 
 
 %changelog
-* Fri Dec 15 2017 Ben Harper <ben.harper@rackspace.com> - 4.5.24-1.ius
+* Tue Mar 06 2018 Ben Harper <ben.harper@rackspace.com> - 4.6.2-1.ius
 - Latest upstream
+- update python macros per iuscommunity-pkg/python35u@71a8838
+- add Patch1, adapted from Fedora:
+  https://src.fedoraproject.org/rpms/mod_wsgi/c/c8a7642dcf4742963337e1c4e15b1263951c6ce6
+
+* Fri Dec 15 2017 Ben Harper <ben.harper@rackspace.com> - 4.5.24-1.ius
 - Latest upstream
 - update URL from Fedora:
   https://src.fedoraproject.org/rpms/mod_wsgi/c/5585f33d82e1f027384d70df753b545ac7ab36de
